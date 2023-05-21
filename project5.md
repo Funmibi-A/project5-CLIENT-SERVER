@@ -18,7 +18,7 @@
 
 
 
-## **LABs**
+# **LABs**
 
 > Step 1 - Create and configure two Linux-based virtual servers (EC2 instances in AWS).
 
@@ -26,7 +26,17 @@
 
 > Step 2 - Installing MySQL server on the first server
 
-    sudo apt install mysql-server 
+    sudo wget  https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm 
+---
+    sudo dnf install -y mysql80-community-release-el9-1.noarch.rpm
+---
+    sudo dnf repolist enabled | grep "mysql.*-community.*"
+---
+    sudo dnf install mysql-community-server -y
+---
+    sudo systemctl start mysqld
+    sudo systemctl status mysqld
+    sudo systemctl enable mysqld
 
 > Edit security group and enable port 3306 for inbound connections
 
@@ -34,13 +44,18 @@
 
 > After installation, login into the MySQL console
 
-    sudo mysql
+    sudo grep 'temporary password' /var/log/mysqld.log
 
-> Set the root password 
+> Connect to MySQL – Change temporary password
 
 ```SQL
-    ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY 'PassWord.1';
+    sudo mysql_secure_installation
 ```
+
+> Login in mysql server after installation
+
+    sudo mysql -u root -p
+
 ![sql_root](./images/mysql_root.jpg)
 
 > Exit the MySQL shell
@@ -49,67 +64,57 @@
  
 ![exit](./images/exit.jpg)
 
-> Start the interactive mysql script and go through the wizard
-
-    sudo mysql_secure_installation
-
-![mysql secure installation](./images/mysql_installation.jpg)
-
-
-> Login into the the MySQL console with the new 'root' password 
-
-    sudo mysql -p
-
-![mysql login](./images/mysql_login.jpg)
-
-
-> Exit the MySQL console
-
-    exit
-
-![exit](./images/exit.jpg)
-
 
 > Step 3 - Edit MySQL configuration file, change the bind addressess settings and enable remote connection
 
-    sudo vi /etc/mysql/mysql.conf.d/mysqld.cnf
+    sudo vi /etc/my.cnf
 
-    Under the bind addresses section, replace ‘127.0.0.1’ to ‘0.0.0.0’ 
+    Under the [mysqld] section, add the following line
 
-    Enable remote connection 
-
-    Under basic settings, uncomment port = 3306 by removing the '#' sign
+        bind-address = 0.0.0.0 
 
 ![remote connection configuration](./images/config.jpg)
 
-
 > Restart MySQL server
 
-    sudo systemctl enable mysql
-
-![restarting mysql server](./images/restart_mysql_server.jpg)
+    sudo systemctl restart mysqld
 
 > Create a new user on MySQL server for remote connection using the local ip address
 
-    CREATE USER 'funmibi'@'local-Ip-address' IDENTIFIED WITH mysql_native_password BY 'password';
-
-    GRANT ALL PRIVILEGES ON *.* TO 'funmibi'@'local-ip-address' WITH GRANT OPTION;
-
+    sudo mysql -u root -p
+---
+    CREATE USER 'funmibi'@'172.31.81.11' IDENTIFIED BY '8x9d/flp?(Rf';
+---
+    GRANT ALL PRIVILEGES ON *.* TO 'funmibi'@'172.31.81.11' WITH GRANT OPTION;
+---
     FLUSH PRIVILEGES;
 
 ![remote user](./images/remote_user.jpg)
 
 > Install mysql client on the second server 
 
-    sudo apt install mysql-client-core-8.0
+    sudo wget https://repo.mysql.com//mysql80-community-release-el9-1.noarch.rpm
+---
+     sudo rpm -ivh mysql80-community-release-el9-1.noarch.rpm
+---
+    sudo dnf repolist enabled | grep "mysql.*-community.*"
+---
+    sudo yum update
+---
+    sudo yum install mysql-community-client
+---
+    sudo mysql --version
 
 ![installing mysql client](./images/mysql_client.jpg)
-
 
 > Connect to the MySQL server from the client server without using SSH
 
     mysql -u username -h mysql_server_ip -p
-
-    mysql -u funmibi -h 172.31.86.242 -p
+---
+    mysql -u funmibi -h 172.31.84.82 -p
 
 ![remote_login](./images/remote_login.jpg)
+
+
+
+
